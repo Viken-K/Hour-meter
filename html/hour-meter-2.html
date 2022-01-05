@@ -1,0 +1,90 @@
+<select id="select-timer" size="3">
+  <option value="del">刪檔案</option>
+  <option value="ban">封帳</option>
+  <option value="generic">自定義</option>
+</select><input id="generic-msg" class="hidden" /><select id="template">
+  <option value=0>第七條</option>
+  <option value=1>第七條：缺失與錯譯</option>
+  <option value=2>-3</option>
+</select>
+<p style="border-left: 5px purple solid">我從什麼時候開始計時器？<br><br>
+<span class="start selected">現在</span> <span class="start">未來</span> <input id="start-time" style="display:none" value="YYYY/MM/DD HH:MM:SS" />
+</p>
+<p style="border-left: 5px purple solid">運行長度（鐘數）<br><br>
+<span class="duration selected">1</span> <span class="duration">24</span> <span class="duration">48</span> <span class="duration">72</span> <span class="duration">你決定</span> <input id="duration-time" style="display:none" value="5" type="number" />
+</p>
+ 
+<span id="copyarea">
+[[iframe https://viken-k.github.io/Hour-meter/html/hour-meter-1.html#?<i id="output"></i> style="width: 500px; height: 250px; border: 0;"]]
+<br><br>
+<span class="templates">基於本站翻譯規則的[http://scp-zh-tr.wikidot.com/translation-rules#toc7 第七條]所規範，如果本文是經由原譯者同意轉載的作品請於下列倒數計時器的時間結束前附上轉載同意證明，若期限截止而未能補上證明本文將予以刪除。</span>
+<span class="templates" style="display:none">經比對現有的[[[SCP-XXXX]]]存在著許多翻譯上的缺失與錯譯，根據本站翻譯守則第七條所規範我們將給予72小時的改善期，
+若期限截止而未完成改善則將予以刪除處理，敬請留意。</span>
+<span class="templates" style="display:none">本文將會於上述計時器歸零，又仍未回上至超過-2分時被刪除，敬請留意。</span>
+</span>
+<br><br><button id="copy">複製</button>
+<script>
+const templates = [];
+ 
+const $timer = document.getElementById("select-timer");
+const $msg = document.getElementById("generic-msg");
+$timer.onchange = () => {
+  if ($timer.value == "generic")
+    $msg.classList.remove('hidden');
+  else
+    $msg.classList.add('hidden');
+}
+const $start = document.getElementsByClassName("start");
+const $startTime = document.getElementById("start-time");
+$startTime.value = new Date(Date.now()).toISOString().replace('T',' ').match(/[^.]+/);
+var startNow = true;
+[].forEach.call($start, (v,i)=>{
+    v.onclick = function(){
+    $start[i].classList.add('selected');
+    $start[1 - i].classList.remove('selected');
+    startNow = !i;
+    $startTime.style.display = startNow ? 'none' : '';
+  }
+});
+function startTime() {
+  return startNow ? Date.now() : Date.parse($startTime.value);
+}
+const $duration = document.getElementsByClassName("duration");
+const $durationTime = document.getElementById("duration-time");
+var durationSel = 0;
+[].forEach.call($duration, (v,i)=>{
+    v.onclick = function(){
+    $duration[durationSel].classList.remove('selected');
+    $duration[i].classList.add('selected');
+    durationSel = i;
+    $durationTime.style.display = durationSel == $duration.length - 1 ? '' : 'none';
+  }
+})
+const $templates = document.getElementsByClassName("templates");
+const $template = document.getElementById("template");
+$template.onchange=()=>{
+  for (var el of $templates)
+    el.style.display = 'none';
+  $templates[$template.value].style.display = '';
+}
+function tick(){
+document.getElementById("output").innerHTML = `time=${startTime() + 3600000 * [1,24,48,72,+$durationTime.value][durationSel]}&type=${$timer.value == "generic" ? $msg.value.replace(/ /g,'%20') : $timer.value}`
+requestAnimationFrame(tick);
+}
+tick()
+document.getElementById("copy").onclick = function(){
+        var textarea = document.createElement("textarea");
+        textarea.textContent = document.getElementById("copyarea").textContent;
+        textarea.style.position = "fixed";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+}
+</script>
+<style>
+span,p{padding:5px}
+span.selected{background:black;color:white}
+#generic-msg.hidden{display:none}
+#generic-msg:not(.hidden)+select{display:none}
+</style>
